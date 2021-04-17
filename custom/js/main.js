@@ -1,8 +1,8 @@
 var isDrawOn = false
 var draw
-var PointType = ['ATM','Tree','Telephone Poles', 'Electricity Poles'];
-var LineType = ['National Highway','State Highway','River','Telephone Lines'];
-var PolygonType = ['Water Body','Commercial Land', 'Residential Land','Building'];
+var PointType = ['ATM', 'Tree', 'Telephone Poles', 'Electricity Poles'];
+var LineType = ['National Highway', 'State Highway', 'River', 'Telephone Lines'];
+var PolygonType = ['Water Body', 'Commercial Land', 'Residential Land', 'Building'];
 var selectedGeomType
 
 /**
@@ -21,13 +21,12 @@ app.DrawingApp = function (opt_options) {
 
     var this_ = this
     var startStopApp = function () {
-        console.log('in button click')
         if (isDrawOn == false) {
             $('#startDrawModal').modal('show')
         } else {
             map.removeInteraction(draw)
             isDrawOn = false
-            document.getElementById('drawbtn').innerHTML = '<i class="fas fa-pencil-ruler"</i>';
+            document.getElementById('drawbtn').innerHTML = '<i class="fas fa-pencil-ruler"></i>';
             typeofFeature();
             $('#enterInformationModal').modal('show')
         }
@@ -91,14 +90,41 @@ var map = new ol.Map({
     layers: layerArray
 })
 
-function startDraw(geomType){
+function startDraw(geomType) {
     selectedGeomType = geomType
     draw = new ol.interaction.Draw({
         type: geomType,
         source: drawSource
     })
-    $('#startdrawModal').modal('hide')
+    $('#startDrawModal').modal('hide')
     map.addInteraction(draw)
     isDrawOn = true
     document.getElementById('drawbtn').innerHTML = '<i class="far fa-stop-circle"></i>'
+}
+
+function typeofFeature() {
+    var dropdowntype = document.getElementById('typeofFeatures')
+    dropdowntype.innerHTML = ''
+    if (selectedGeomType == 'Point') {
+        for (i = 0; i < PointType.length; i++) {
+            var op = document.createElement('option')
+            op.value = PointType[i]
+            op.innerHTML = PointType[i]
+            dropdowntype.appendChild(op)
+        }
+    } else if (selectedGeomType == 'LineString') {
+        for (i = 0; i < LineType.length; i++) {
+            var op = document.createElement('option')
+            op.value = LineType[i]
+            op.innerHTML = LineType[i]
+            dropdowntype.appendChild(op)
+        }
+    } else {
+        for (i = 0; i < PolygonType.length; i++) {
+            var op = document.createElement('option')
+            op.value = PolygonType[i]
+            op.innerHTML = PolygonType[i]
+            dropdowntype.appendChild(op)
+        }
+    }
 }
