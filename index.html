@@ -1,36 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- BootStrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+        integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous" />
     <!-- Openlayers css-->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+    <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css" type="text/css" />
     <!-- component css-->
-    <link rel="stylesheet" href="custom\css\map.css"/>
+    <link rel="stylesheet" href="custom\css\map.css" />
+    <link rel="stylesheet" href="assets\fontawesome\css\all.css" />
+    <script src="https://code.jquery.com/jquery-3.5.1.js"
+        integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
     <!-- Openlayers JS -->
-    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+    <script src="https://openlayers.org/en/v4.6.5/build/ol.js" type="text/javascript"></script>
     <title>Exmaple App</title>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-light bg-light">
         <a class="navbar-brand" href="#">
-          <img src="assets\img\img.png" width="30" height="40" class="d-inline-block align-top" alt="">
-          Application-1
+            <img src="assets\img\img.png" width="30" height="40" class="d-inline-block align-top" alt="" />
+            <i class="far fa-smile fa-2x"></i> Application-One
         </a>
-      </nav>
+    </nav>
 
-      <!-- Map div-->
-      <div class="map" id="map"></div>
+    <!-- Map div-->
+    <div class="map" id="map"></div>
+
+    <!-- Start draw Modal -->
+    <div class="modal fade" id="startDrawModal" tabindex="-1" role="dialog" aria-labelledby="startdrawModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="startdrawModalLabel">
+                        Select Draw type
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="text-align: center">
+                    <!-- Cards -->
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Point</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">
+                                        ATM, Tree, Pole, Bus Stop, etc.
+                                    </h6>
+                                    <p class="card-text">
+                                        <i class="fas fa-map-marker-alt fa-2x"></i>
+                                    </p>
+                                    <a onclick="startDraw('Point')" class="card-link">Add Point</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Line</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">
+                                        Road, River, Telephone Wire, etc.
+                                    </h6>
+                                    <p class="card-text"><i class="fas fa-road fa-2x"></i></p>
+                                    <a onclick="startDraw('LineString')" class="card-link">Add Line</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Polygon</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">
+                                        Building, Garden, Ground, etc.
+                                    </h6>
+                                    <p class="card-text">
+                                        <i class="fas fa-draw-polygon fa-2x"></i>
+                                    </p>
+                                    <a onclick="startDraw('Polygon')" class="card-link">Add Polygon</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End draw Modal -->
 
     <!-- Bootstarp JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" integrity="sha384-+YQ4JLhjyBLPDQt//I+STsc9iw4uQqACwlvpslubQzn4u2UU2UFM80nGisd026JF" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
     <!-- component -->
     <script src="custom\js\main.js"></script>
 </body>
+
 </html>
