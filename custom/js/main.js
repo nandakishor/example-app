@@ -128,3 +128,48 @@ function typeofFeature() {
         }
     }
 }
+
+/**
+ * Save features to DB
+ */
+function savetodb() {
+    var features = drawSource.getFeatures()
+    var geoJSONformat = new ol.format.GeoJSON()
+    var geoJSONfeatures = geoJSONformat.writeFeaturesObject(features)
+
+    geoJSONfeatures.features.forEach(element => {
+        console.log(element.geometry);
+        var type = document.getElementById('typeofFeatures').value
+        var name = document.getElementById('nameofFeatures').value
+        var geomstring = JSON.stringify(element.geometry)
+        if (type != '') {
+            $.ajax({
+                url: 'save.php',
+                type: 'POST',
+                data: {
+                    typeofFeature: type,
+                    nameofFeature: name,
+                    geom: geomstring
+                },
+                success: function (dataResult) {
+                    var res = JSON.parse(dataResult)
+                    if (res.statusCode == 200) {
+                        console.log('Data added successfully')
+                    } else {
+                        console.log('Data not added')
+                    }
+                }
+            })
+        } else {
+            alert('please select type')
+        }
+    });
+    clearDrawSource()
+}
+
+/**
+ * Clear DataSource
+ */
+function clearDrawSource() {
+    drawSource.clear();
+}
