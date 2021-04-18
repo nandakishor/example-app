@@ -1,8 +1,8 @@
 var isDrawOn = false
 var draw
-var PointType = ['ATM', 'Tree', 'Telephone Poles', 'Electricity Poles'];
+var PointType = ['ATM', 'Tree', 'Telephone Poles', 'Electricity Poles', 'Shops'];
 var LineType = ['National Highway', 'State Highway', 'River', 'Telephone Lines'];
-var PolygonType = ['Water Body', 'Commercial Land', 'Residential Land', 'Building'];
+var PolygonType = ['Water Body', 'Commercial Land', 'Residential Land', 'Building', 'Government Building'];
 var selectedGeomType
 
 /**
@@ -63,7 +63,21 @@ var baseMap = new ol.layer.Tile({
     })
 })
 
+/**
+ * GeoServer
+ */
+var featureLayerSource = new ol.source.TileWMS({
+    url: "http://localhost:8080/geoserver/example_app/wms",
+    params: { 'LAYERS': 'example_app:featuresDrawn', 'tiled': true },
+    serverType: 'geoserver'
+})
+
+var featureLayer = new ol.layer.Tile({
+    source: featureLayerSource
+})
+
 var drawSource = new ol.source.Vector()
+
 var drawLayer = new ol.layer.Vector({
     source: drawSource
 })
@@ -72,7 +86,7 @@ var drawLayer = new ol.layer.Vector({
  * Layers
  */
 
-var layerArray = [baseMap, drawLayer]
+var layerArray = [baseMap, featureLayer, drawLayer]
 
 /**
  * Map
@@ -164,6 +178,13 @@ function savetodb() {
             alert('please select type')
         }
     });
+
+    var params = featureLayer.getSource().getParams();
+    params.t = new Date().getMilliseconds();
+    featureLayer.getSource().updateParams(params);
+
+    // close modal
+    $("#enterInformationModal").modal('hide')
     clearDrawSource()
 }
 

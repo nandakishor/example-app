@@ -6,17 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- BootStrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
-        integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
     <!-- Openlayers css-->
     <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css" type="text/css" />
+    <!-- Openlayers JS -->
+    <script src="https://openlayers.org/en/v4.6.5/build/ol.js" type="text/javascript"></script>
     <!-- component css-->
-    <link rel="stylesheet" href="custom\css\map.css" />
+    <link rel="stylesheet" href="custom/css/map.css" />
     <link rel="stylesheet" href="assets\fontawesome\css\all.css" />
     <script src="https://code.jquery.com/jquery-3.5.1.js"
         integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
-    <!-- Openlayers JS -->
-    <script src="https://openlayers.org/en/v4.6.5/build/ol.js" type="text/javascript"></script>
+    <!-- OL-ext CSS -->
+    <link rel="stylesheet" href="assets/css/ol-ext.css" />
+    <!-- OL-ext JS -->
+    <script src="assets/js/ol-ext.js"></script>
     <title>Exmaple App</title>
 </head>
 
@@ -106,29 +110,33 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="enterInformationModalLabel">Enter Feature's Detail</h5>
+                    <h5 class="modal-title" id="enterInformationModalLabel">
+                        Enter Feature's Detail
+                    </h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body" style='text-align: center;'>
+                <div class="modal-body" style="text-align: center">
                     <!-- begin: Input -->
                     <div class="form-group">
                         <label for="typeofFeatures">Type of Feature</label>
-                        <select class="form-control" id="typeofFeatures">
-                        </select>
+                        <select class="form-control" id="typeofFeatures"></select>
                     </div>
                     <div class="form-group">
                         <label for="nameofFeatures">Name</label>
-                        <input type="text" class="form-control" id="nameofFeatures" aria-describedby="textHelp">
+                        <input type="text" class="form-control" id="nameofFeatures" aria-describedby="textHelp" />
                         <small id="textHelp" class="form-text text-muted">Address, Name, etc.</small>
                     </div>
                     <!-- end: Input -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                        onclick="clearDrawSource()">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="savetodb()">Save Featues</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="clearDrawSource()">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="savetodb()">
+                        Save Featues
+                    </button>
                 </div>
             </div>
         </div>
