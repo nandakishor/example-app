@@ -51,8 +51,8 @@ ol.inherits(app.DrawingApp, ol.control.Control);
  * View
  */
 var mapView = new ol.View({
-    center: [8637237.501504004, 1457228.7329525042],
-    zoom: 11
+    center: [8633240.92947555, 1460858.9432369084],
+    zoom: 17
 })
 /**
  * Basemap
