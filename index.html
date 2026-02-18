@@ -36,6 +36,12 @@
     <!-- Map div-->
     <div class="map" id="map"></div>
 
+    <!-- Popup -->
+    <div id="popup" class="ol-popup">
+        <a href="#" id="popup-closer" class="ol-popup-closer" aria-label="Close popup"></a>
+        <div id="popup-content"></div>
+    </div>
+
     <!-- Start draw Modal -->
     <div class="modal fade" id="startDrawModal" tabindex="-1" role="dialog" aria-labelledby="startdrawModalLabel"
         aria-hidden="true">
@@ -52,7 +58,7 @@
                 <div class="modal-body" style="text-align: center">
                     <!-- Cards -->
                     <div class="row">
-                        <div class="col-4">
+                        <!-- <div class="col-4">
                             <div class="card">
                                 <div class="card-body">
                                     <h5 class="card-title">Point</h5>
@@ -77,7 +83,7 @@
                                     <a onclick="startDraw('LineString')" class="card-link">Add Line</a>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="col-4">
                             <div class="card">
                                 <div class="card-body">
@@ -127,6 +133,18 @@
                         <label for="nameofFeatures">Name</label>
                         <input type="text" class="form-control" id="nameofFeatures" aria-describedby="textHelp" />
                         <small id="textHelp" class="form-text text-muted">Address, Name, etc.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="surveyNumber">Survey Number</label>
+                        <input type="text" class="form-control" id="surveyNumber" />
+                    </div>
+                    <div class="form-group">
+                        <label for="ownerName">Owner Name</label>
+                        <input type="text" class="form-control" id="ownerName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="calcArea">Calculated Area (sq m)</label>
+                        <input type="text" class="form-control" id="calcArea" readonly />
                     </div>
                     <!-- end: Input -->
                 </div>

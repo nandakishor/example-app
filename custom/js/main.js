@@ -27,8 +27,9 @@ app.DrawingApp = function (opt_options) {
             map.removeInteraction(draw)
             isDrawOn = false
             document.getElementById('drawbtn').innerHTML = '<i class="fas fa-pencil-ruler"></i>';
-            typeofFeature();
-            $('#enterInformationModal').modal('show')
+            // With new workflow, we don't usually stop manually, but if we do:
+            // typeofFeature();
+            // $('#enterInformationModal').modal('show')
         }
     }
 
@@ -68,7 +69,7 @@ var baseMap = new ol.layer.Tile({
  */
 var featureLayerSource = new ol.source.TileWMS({
     url: "http://localhost:8080/geoserver/example_app/wms",
-    params: { 'LAYERS': 'example_app:featuresDrawn', 'tiled': true },
+    params: { 'LAYERS': 'example_app:featuresdrawn', 'tiled': true },
     serverType: 'geoserver'
 })
 
@@ -86,7 +87,28 @@ var drawLayer = new ol.layer.Vector({
  * Layers
  */
 
-var layerArray = [baseMap, featureLayer, drawLayer]
+let layerArray = [baseMap, featureLayer, drawLayer]
+
+/**
+ * Popup
+ */
+let container = document.getElementById('popup');
+let content = document.getElementById('popup-content');
+let closer = document.getElementById('popup-closer');
+
+let overlay = new ol.Overlay({
+    element: container,
+    autoPan: true,
+    autoPanAnimation: {
+        duration: 250
+    }
+});
+
+closer.onclick = function () {
+    overlay.setPosition(undefined);
+    closer.blur();
+    return false;
+};
 
 /**
  * Map
@@ -101,8 +123,45 @@ var map = new ol.Map({
     ]),
     target: 'map',
     view: mapView,
-    layers: layerArray
+    layers: layerArray,
+    overlays: [overlay]
 })
+
+/**
+ * Click handler for Popup
+ */
+map.on('singleclick', function (evt) {
+    if (isDrawOn) return; // Don't show popup while drawing
+
+    var viewResolution = /** @type {number} */ (mapView.getResolution());
+    var url = featureLayerSource.getGetFeatureInfoUrl(
+        evt.coordinate, viewResolution, 'EPSG:3857',
+        { 'INFO_FORMAT': 'application/json' }
+    );
+    if (url) {
+        $.ajax({
+            url: url,
+            success: function (data) {
+                // Assuming data is GeoJSON
+                if (data.features && data.features.length > 0) {
+                    var feature = data.features[0];
+                    var props = feature.properties;
+                    var html = '<h5>Feature Info</h5>';
+                    html += '<p><strong>Type:</strong> ' + (props.type || 'N/A') + '</p>';
+                    html += '<p><strong>Name:</strong> ' + (props.name || 'N/A') + '</p>';
+                    html += '<p><strong>Survey No:</strong> ' + (props.survey_number || 'N/A') + '</p>';
+                    html += '<p><strong>Owner:</strong> ' + (props.owner_name || 'N/A') + '</p>';
+                    html += '<p><strong>Area:</strong> ' + (props.area || 'N/A') + '</p>';
+                    content.innerHTML = html;
+                    overlay.setPosition(evt.coordinate);
+                } else {
+                    // No features found, hide popup
+                    overlay.setPosition(undefined);
+                }
+            }
+        });
+    }
+});
 
 function startDraw(geomType) {
     selectedGeomType = geomType
@@ -114,6 +173,28 @@ function startDraw(geomType) {
     map.addInteraction(draw)
     isDrawOn = true
     document.getElementById('drawbtn').innerHTML = '<i class="far fa-stop-circle"></i>'
+
+    draw.on('drawend', function (evt) {
+        var feature = evt.feature;
+        var geometry = feature.getGeometry();
+        
+        // Calculate Area
+        var area = 0;
+        if (geomType === 'Polygon') {
+            // Fix for OpenLayers 4.6.5: ol.Sphere.getArea is a static method
+            area = ol.Sphere.getArea(geometry); 
+        }
+
+        // Stop drawing interaction immediately after one feature
+        map.removeInteraction(draw);
+        isDrawOn = false;
+        document.getElementById('drawbtn').innerHTML = '<i class="fas fa-pencil-ruler"></i>';
+
+        // Prepare and show modal
+        typeofFeature();
+        $('#calcArea').val(area.toFixed(2));
+        $('#enterInformationModal').modal('show');
+    });
 }
 
 function typeofFeature() {
@@ -155,6 +236,10 @@ function savetodb() {
         console.log(element.geometry);
         var type = document.getElementById('typeofFeatures').value
         var name = document.getElementById('nameofFeatures').value
+        var surveyNumber = document.getElementById('surveyNumber').value
+        var ownerName = document.getElementById('ownerName').value
+        var area = document.getElementById('calcArea').value
+        
         var geomstring = JSON.stringify(element.geometry)
         if (type != '') {
             $.ajax({
@@ -163,14 +248,19 @@ function savetodb() {
                 data: {
                     typeofFeature: type,
                     nameofFeature: name,
-                    geom: geomstring
+                    geom: geomstring,
+                    surveyNumber: surveyNumber,
+                    ownerName: ownerName,
+                    area: area
                 },
                 success: function (dataResult) {
                     var res = JSON.parse(dataResult)
                     if (res.statusCode == 200) {
                         console.log('Data added successfully')
+                        alert('Data added successfully'); // Feedback to user
                     } else {
                         console.log('Data not added')
+                        alert('Error adding data');
                     }
                 }
             })
