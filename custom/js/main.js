@@ -1,5 +1,6 @@
 var isDrawOn = false
 var draw
+var snap
 var PointType = ['ATM', 'Tree', 'Telephone Poles', 'Electricity Poles', 'Shops'];
 var LineType = ['National Highway', 'State Highway', 'River', 'Telephone Lines'];
 var PolygonType = ['Water Body', 'Commercial Land', 'Residential Land', 'Building', 'Government Building'];
@@ -25,6 +26,7 @@ app.DrawingApp = function (opt_options) {
             $('#startDrawModal').modal('show')
         } else {
             map.removeInteraction(draw)
+            map.removeInteraction(snap)
             isDrawOn = false
             document.getElementById('drawbtn').innerHTML = '<i class="fas fa-pencil-ruler"></i>';
             // With new workflow, we don't usually stop manually, but if we do:
@@ -77,6 +79,34 @@ var featureLayer = new ol.layer.Tile({
     source: featureLayerSource
 })
 
+/**
+ * WFS Source for Snapping and Topology
+ */
+var wfsSource = new ol.source.Vector({
+    format: new ol.format.GeoJSON(),
+    url: function (extent) {
+        return 'http://localhost:8080/geoserver/example_app/wfs?service=WFS&' +
+            'version=1.1.0&request=GetFeature&typename=example_app:featuresdrawn&' +
+            'outputFormat=application/json&srsname=EPSG:3857&' +
+            'bbox=' + extent.join(',') + ',EPSG:3857';
+    },
+    strategy: ol.loadingstrategy.bbox
+});
+
+// Hidden layer to ensure WFS data is loaded for snapping/topology
+var wfsLayer = new ol.layer.Vector({
+    source: wfsSource,
+    style: new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'rgba(0, 0, 0, 0)', // Invisible
+            width: 0
+        }),
+        fill: new ol.style.Fill({
+            color: 'rgba(0, 0, 0, 0)' // Invisible
+        })
+    })
+});
+
 var drawSource = new ol.source.Vector()
 
 var drawLayer = new ol.layer.Vector({
@@ -87,7 +117,7 @@ var drawLayer = new ol.layer.Vector({
  * Layers
  */
 
-let layerArray = [baseMap, featureLayer, drawLayer]
+let layerArray = [baseMap, featureLayer, wfsLayer, drawLayer]
 
 /**
  * Popup
@@ -169,8 +199,14 @@ function startDraw(geomType) {
         type: geomType,
         source: drawSource
     })
+    
+    snap = new ol.interaction.Snap({
+        source: wfsSource
+    });
+
     $('#startDrawModal').modal('hide')
     map.addInteraction(draw)
+    map.addInteraction(snap)
     isDrawOn = true
     document.getElementById('drawbtn').innerHTML = '<i class="far fa-stop-circle"></i>'
 
@@ -178,6 +214,56 @@ function startDraw(geomType) {
         var feature = evt.feature;
         var geometry = feature.getGeometry();
         
+        // Topology Check: Overlap
+        if (geomType === 'Polygon') {
+            var parser = new ol.format.GeoJSON();
+            var drawnGeoJSON = parser.writeFeatureObject(feature);
+            var features = wfsSource.getFeatures();
+            var isOverlap = false;
+
+            for (const existingFeature of features) {
+                // Check if it's a Polygon to avoid errors with Points/Lines
+                 if (existingFeature.getGeometry().getType() === 'Polygon' || existingFeature.getGeometry().getType() === 'MultiPolygon') {
+                     var existingGeoJSON = parser.writeFeatureObject(existingFeature);
+                     // Turf intersect returns null if no overlap (or empty)
+                     try {
+                         var intersection = turf.intersect(drawnGeoJSON, existingGeoJSON);
+                         // Check if intersection exists and is an overlapping area (Polygon/MultiPolygon)
+                         // We allow LineString/Point intersections (touching/snapping)
+                         if (intersection && intersection.geometry) {
+                             var type = intersection.geometry.type;
+                             if (type === 'Polygon' || type === 'MultiPolygon') {
+                                 isOverlap = true;
+                                 break;
+                             }
+                         }
+                     } catch (err) {
+                         console.error("Turf intersection error:", err);
+                     }
+                 }
+            }
+
+            if (isOverlap) {
+                alert("Topology Error: Feature overlaps with an existing feature!");
+                // Remove interaction and clear source to prevent saving
+                // We need to wait for the feature to be added to source (which happens after drawend) to remove it?
+                // Actually, drawend happens *before* feature is fully added to source in some versions, 
+                // but usually we can just stop here or remove it in a timeout or handle it in the saving step.
+                // Best way: Don't proceed to modal.
+                setTimeout(function() {
+                     drawSource.clear(); 
+                }, 100); // Clear the invalid feature
+                
+                // Keep drawing mode on? Or stop? 
+                // Let's stop to be safe and let user try again.
+                map.removeInteraction(draw);
+                map.removeInteraction(snap);
+                isDrawOn = false;
+                document.getElementById('drawbtn').innerHTML = '<i class="fas fa-pencil-ruler"></i>';
+                return; 
+            }
+        }
+
         // Calculate Area
         var area = 0;
         if (geomType === 'Polygon') {
@@ -187,6 +273,7 @@ function startDraw(geomType) {
 
         // Stop drawing interaction immediately after one feature
         map.removeInteraction(draw);
+        map.removeInteraction(snap);
         isDrawOn = false;
         document.getElementById('drawbtn').innerHTML = '<i class="fas fa-pencil-ruler"></i>';
 
@@ -258,6 +345,13 @@ function savetodb() {
                     if (res.statusCode == 200) {
                         console.log('Data added successfully')
                         alert('Data added successfully'); // Feedback to user
+                        // Refresh WMS layer
+                        var params = featureLayer.getSource().getParams();
+                        params.t = new Date().getMilliseconds();
+                        featureLayer.getSource().updateParams(params);
+                         // Refresh WFS source so the new feature is known for snapping/topology
+                        wfsSource.clear(); 
+                        wfsSource.refresh(); 
                     } else {
                         console.log('Data not added')
                         alert('Error adding data');
@@ -269,18 +363,18 @@ function savetodb() {
         }
     });
 
-    var params = featureLayer.getSource().getParams();
-    params.t = new Date().getMilliseconds();
-    featureLayer.getSource().updateParams(params);
-
     // close modal
     $("#enterInformationModal").modal('hide')
     clearDrawSource()
 }
 
 /**
- * Clear DataSource
+ * Clear DataSource and Form
  */
 function clearDrawSource() {
     drawSource.clear();
+    document.getElementById('nameofFeatures').value = '';
+    document.getElementById('surveyNumber').value = '';
+    document.getElementById('ownerName').value = '';
+    document.getElementById('calcArea').value = '';
 }
