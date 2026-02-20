@@ -21,17 +21,17 @@
     <link rel="stylesheet" href="assets/css/ol-ext.css" />
     <!-- OL-ext JS -->
     <script src="assets/js/ol-ext.js"></script>
-    <!-- Turf.js -->
+    <!-- Turf.js v6 -->
     <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
-    <title>Exmaple App</title>
+    <title>Example App – Parcel Manager</title>
 </head>
 
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-light bg-light">
         <a class="navbar-brand" href="#">
-            <img src="assets\img\img.png" width="30" height="40" class="d-inline-block align-top" alt="" />
-            <i class="far fa-smile fa-2x"></i> Application-One
+            <img src="assets\img\img.png" width="30" height="40" class="d-inline-block align-top" alt="Logo" />
+            <i class="far fa-smile fa-2x"></i> Parcel Manager
         </a>
     </nav>
 
@@ -44,97 +44,61 @@
         <div id="popup-content"></div>
     </div>
 
-    <!-- Start draw Modal -->
+    <!-- ================================================================ -->
+    <!--  DRAW TYPE MODAL                                                  -->
+    <!-- ================================================================ -->
     <div class="modal fade" id="startDrawModal" tabindex="-1" role="dialog" aria-labelledby="startdrawModalLabel"
         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="startdrawModalLabel">
-                        Select Draw type
-                    </h5>
+                    <h5 class="modal-title" id="startdrawModalLabel">Select Draw Type</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body" style="text-align: center">
-                    <!-- Cards -->
-                    <div class="row">
-                        <!-- <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Point</h5>
-                                    <h6 class="card-subtitle mb-2 text-muted">
-                                        ATM, Tree, Pole, Bus Stop, etc.
-                                    </h6>
-                                    <p class="card-text">
-                                        <i class="fas fa-map-marker-alt fa-2x"></i>
-                                    </p>
-                                    <a onclick="startDraw('Point')" class="card-link">Add Point</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">Line</h5>
-                                    <h6 class="card-subtitle mb-2 text-muted">
-                                        Road, River, Telephone Wire, etc.
-                                    </h6>
-                                    <p class="card-text"><i class="fas fa-road fa-2x"></i></p>
-                                    <a onclick="startDraw('LineString')" class="card-link">Add Line</a>
-                                </div>
-                            </div>
-                        </div> -->
-                        <div class="col-4">
+                    <div class="row justify-content-center">
+                        <div class="col-6">
                             <div class="card">
                                 <div class="card-body">
                                     <h5 class="card-title">Polygon</h5>
-                                    <h6 class="card-subtitle mb-2 text-muted">
-                                        Building, Garden, Ground, etc.
-                                    </h6>
-                                    <p class="card-text">
-                                        <i class="fas fa-draw-polygon fa-2x"></i>
-                                    </p>
-                                    <a onclick="startDraw('Polygon')" class="card-link">Add Polygon</a>
+                                    <h6 class="card-subtitle mb-2 text-muted">Parcel, Building, Garden, etc.</h6>
+                                    <p class="card-text"><i class="fas fa-draw-polygon fa-2x"></i></p>
+                                    <a onclick="startDraw('Polygon')" class="card-link" style="cursor:pointer">Add Polygon</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                        Close
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- End draw Modal -->
 
-    <!-- Start information modal-->
+    <!-- ================================================================ -->
+    <!--  FEATURE INFORMATION MODAL (Save / Update)                        -->
+    <!-- ================================================================ -->
     <div class="modal fade" id="enterInformationModal" tabindex="-1" role="dialog"
         aria-labelledby="enterInformationModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="enterInformationModalLabel">
-                        Enter Feature's Detail
-                    </h5>
+                    <h5 class="modal-title" id="enterInformationModalLabel">Feature Details</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body" style="text-align: center">
-                    <!-- begin: Input -->
+                <div class="modal-body">
                     <div class="form-group">
                         <label for="typeofFeatures">Type of Feature</label>
                         <select class="form-control" id="typeofFeatures"></select>
                     </div>
                     <div class="form-group">
                         <label for="nameofFeatures">Name</label>
-                        <input type="text" class="form-control" id="nameofFeatures" aria-describedby="textHelp" />
-                        <small id="textHelp" class="form-text text-muted">Address, Name, etc.</small>
+                        <input type="text" class="form-control" id="nameofFeatures" placeholder="Address, Name, etc." />
                     </div>
                     <div class="form-group">
                         <label for="surveyNumber">Survey Number</label>
@@ -148,30 +112,109 @@
                         <label for="calcArea">Calculated Area (sq m)</label>
                         <input type="text" class="form-control" id="calcArea" readonly />
                     </div>
-                    <!-- end: Input -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="clearDrawSource()">
-                        Close
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="clearDrawSource()">Close</button>
+                    <button type="button" class="btn btn-primary" id="savebtn" onclick="savetodb()">Save Feature</button>
+                    <button type="button" class="btn btn-success" id="updatebtn" onclick="updatetodb()" style="display:none;">Update Feature</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!--  MERGE MODAL                                                      -->
+    <!-- ================================================================ -->
+    <div class="modal fade" id="mergeModal" tabindex="-1" role="dialog" aria-labelledby="mergeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="mergeModalLabel">
+                        <i class="fas fa-object-group mr-2"></i>Merge Parcels – New Parcel Details
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </button>
-                    <button type="button" class="btn btn-primary" onclick="savetodb()">
-                        Save Featues
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 mb-3">
+                        <i class="fas fa-info-circle"></i>
+                        The selected parcels will be <strong>archived</strong> and a new unified parcel will be created.
+                    </div>
+                    <div class="form-group">
+                        <label for="mergeTypeofFeatures">Type of Land</label>
+                        <select class="form-control" id="mergeTypeofFeatures"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mergeNameofFeature">Name / Description</label>
+                        <input type="text" class="form-control" id="mergeNameofFeature" placeholder="Name of merged parcel" />
+                    </div>
+                    <div class="form-group">
+                        <label for="mergeSurveyNumber">New Survey Number</label>
+                        <input type="text" class="form-control" id="mergeSurveyNumber" />
+                    </div>
+                    <div class="form-group">
+                        <label for="mergeOwnerName">Owner Name</label>
+                        <input type="text" class="form-control" id="mergeOwnerName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="mergeCalcArea">Total Computed Area (sq m)</label>
+                        <input type="text" class="form-control" id="mergeCalcArea" readonly />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="cancelMergeMode()">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="executeMerge()">
+                        <i class="fas fa-check-double"></i> Confirm Merge
                     </button>
                 </div>
             </div>
         </div>
     </div>
-    <!-- End information modal-->
 
-    <!-- Bootstarp JS -->
+    <!-- ================================================================ -->
+    <!--  SPLIT CHILDREN MODAL                                             -->
+    <!-- ================================================================ -->
+    <div class="modal fade" id="splitModal" tabindex="-1" role="dialog" aria-labelledby="splitModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="splitModalLabel">
+                        <i class="fas fa-cut mr-2"></i>Split Parcel – Child Parcel Details
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 mb-3">
+                        <i class="fas fa-info-circle"></i>
+                        The <strong>original parcel</strong> will be archived and each child parcel below will be created with a link back to it.
+                    </div>
+                    <!-- Child parcels are dynamically injected here -->
+                    <div id="splitChildrenContainer"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="cancelSplitMode()">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmSplit()">
+                        <i class="fas fa-cut"></i> Confirm Split
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boostrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
         integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
         crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
         integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
         crossorigin="anonymous"></script>
-    <!-- component -->
-    <script src="custom\js\main.js"></script>
+    <!-- Main App -->
+    <script src="custom/js/main.js"></script>
 </body>
 
 </html>
