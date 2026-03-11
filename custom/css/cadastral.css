@@ -1,0 +1,668 @@
+/* ================================================================
+   cadastral.css  –  Cadastral & Land Registry Module
+   Additive styles only – does NOT override existing map.css rules
+   ================================================================ */
+
+/* ---- Google Font ---- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ================================================================
+   APP SHELL – flex layout so sidebar + map sit side-by-side
+   ================================================================ */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+#appShell {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  height: 90vh;   /* match original map height */
+  overflow: hidden;
+}
+
+/* Map takes all remaining width */
+#appShell .map {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+
+/* ================================================================
+   SIDEBAR TOGGLE BUTTON  (sits inside navbar, right-edge)
+   ================================================================ */
+#sidebarToggleBtn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #343a40;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  margin-left: auto;
+}
+#sidebarToggleBtn:hover {
+  background: rgba(0,0,0,0.08);
+}
+
+/* ================================================================
+   SIDEBAR PANEL
+   ================================================================ */
+#cadastralSidebar {
+  width: 310px;
+  min-width: 310px;
+  height: 100%;
+  background: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+#cadastralSidebar.sidebar-hidden {
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ---- Sidebar section header ---- */
+.sidebar-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  border-radius: 0;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.sidebar-section-header i {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+.sidebar-section-header .caret {
+  margin-left: auto;
+  transition: transform 0.25s;
+  font-size: 0.7rem;
+}
+.sidebar-section-header.collapsed .caret {
+  transform: rotate(-90deg);
+}
+
+/* ---- Sidebar card wrapper ---- */
+.sidebar-card {
+  margin: 10px;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+
+.sidebar-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: #e9ecef;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.sidebar-card-body {
+  padding: 12px 14px;
+}
+
+/* ================================================================
+   SEARCH FORM
+   ================================================================ */
+.cadastral-search-form .form-group {
+  margin-bottom: 8px;
+}
+.cadastral-search-form label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 3px;
+}
+.cadastral-search-form .form-control {
+  font-size: 0.82rem;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  height: calc(1.5em + 0.6rem + 2px);
+  padding: 0.3rem 0.65rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.cadastral-search-form .form-control:focus {
+  border-color: #3949ab;
+  box-shadow: 0 0 0 0.15rem rgba(57,73,171,0.2);
+}
+
+.btn-search-primary {
+  background: linear-gradient(135deg, #1565c0, #1976d2);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-search-primary:hover {
+  background: linear-gradient(135deg, #0d47a1, #1565c0);
+  transform: translateY(-1px);
+  color: #fff;
+}
+.btn-search-clear {
+  background: #e9ecef;
+  color: #495057;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  transition: background 0.2s;
+}
+.btn-search-clear:hover {
+  background: #dee2e6;
+}
+
+/* ---- Search results count badge ---- */
+#searchResultsBadge {
+  display: none;
+  font-size: 0.72rem;
+  margin-top: 6px;
+}
+
+/* ================================================================
+   SELECTED PARCEL CARD
+   ================================================================ */
+#parcelSummaryCard {
+  display: none;
+}
+#parcelSummaryCard.visible {
+  display: block;
+}
+
+.parcel-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  background: linear-gradient(135deg, #00695c, #00897b);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.parcel-card-header .parcel-status-badge {
+  font-size: 0.65rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.status-active   { background: #a5d6a7; color: #1b5e20; }
+.status-merged   { background: #cfd8dc; color: #37474f; }
+.status-split    { background: #ffcc80; color: #7c3a00; }
+
+.parcel-info-table {
+  width: 100%;
+  font-size: 0.78rem;
+  margin: 0;
+}
+.parcel-info-table th {
+  width: 38%;
+  color: #6c757d;
+  font-weight: 600;
+  padding: 3px 0;
+  vertical-align: top;
+}
+.parcel-info-table td {
+  color: #212529;
+  padding: 3px 4px;
+  word-break: break-word;
+}
+.parcel-card-actions {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px;
+  border-top: 1px solid #dee2e6;
+  background: #fdfdfd;
+}
+.parcel-card-actions .btn {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* ================================================================
+   CADASTRAL NAVIGATION
+   ================================================================ */
+.cadastral-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cadastral-nav-item a,
+.cadastral-nav-item button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #37474f;
+  text-decoration: none;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.15s, color 0.15s, padding-left 0.15s;
+  cursor: pointer;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  width: 100%;
+  text-align: left;
+}
+.cadastral-nav-item a:hover,
+.cadastral-nav-item button:hover {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding-left: 26px;
+}
+.cadastral-nav-item a i,
+.cadastral-nav-item button i {
+  width: 18px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #78909c;
+  transition: color 0.15s;
+}
+.cadastral-nav-item a:hover i,
+.cadastral-nav-item button:hover i {
+  color: #1565c0;
+}
+.cadastral-nav-item a .nav-badge,
+.cadastral-nav-item button .nav-badge {
+  margin-left: auto;
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #e3f2fd;
+  color: #1565c0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ================================================================
+   MAP TOOLBAR EXTRA BUTTONS (measure / satellite)
+   ================================================================ */
+#cadastralToolbar {
+  position: absolute;
+  top: 65px;
+  right: 0.5em;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#cadastralToolbar button {
+  width: 2em;
+  height: 2em;
+  font-size: 1em;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.1s;
+}
+#cadastralToolbar button:hover {
+  transform: scale(1.08);
+  background: #fff;
+}
+#sateliteToggleBtn.sat-active {
+  background: #fff9c4;
+  color: #f57f17;
+}
+#measureAreaBtn.measure-active,
+#measureDistBtn.measure-active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+#cancelMeasureBtn {
+  background: #ffebee !important;
+  color: #c62828;
+  display: none;
+}
+
+/* ================================================================
+   COORDINATE / SCALE HUD
+   ================================================================ */
+#coordHud {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 26px;
+  background: rgba(255,255,255,0.88);
+  border-top: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 20px;
+  font-size: 0.72rem;
+  font-family: 'Inter', monospace;
+  color: #495057;
+  z-index: 100;
+  pointer-events: none;
+}
+#coordHud .hud-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+#coordHud .hud-label {
+  font-weight: 700;
+  color: #0d47a1;
+  text-transform: uppercase;
+  font-size: 0.64rem;
+  letter-spacing: 0.5px;
+}
+
+/* ================================================================
+   MEASURE TOOLTIP
+   ================================================================ */
+.measure-tooltip {
+  position: relative;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  margin-bottom: 10px;
+}
+.measure-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(0,0,0,0.8);
+}
+
+/* ================================================================
+   MAP LEGEND
+   ================================================================ */
+#mapLegend {
+  position: absolute;
+  bottom: 30px;
+  right: 10px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  min-width: 190px;
+  z-index: 100;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+#legendToggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: linear-gradient(135deg, #37474f, #455a64);
+  color: #fff;
+  border: none;
+  padding: 7px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+}
+#legendToggleBtn .legend-caret {
+  transition: transform 0.25s;
+  font-size: 0.7rem;
+}
+#legendToggleBtn.collapsed .legend-caret {
+  transform: rotate(-90deg);
+}
+#legendBody {
+  padding: 10px 12px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  color: #212529;
+}
+.legend-swatch {
+  width: 22px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 2px solid transparent;
+}
+.swatch-residential { background: rgba(0,0,255,0.15);   border-color: #0000cc; }
+.swatch-commercial  { background: rgba(255,140,0,0.25); border-color: #ff8c00; }
+.swatch-agricultural{ background: rgba(34,139,34,0.2);  border-color: #228B22; }
+.swatch-selected {
+  background: rgba(0,0,255,0.1);
+  border: 2px dashed #003cff;
+}
+.swatch-disputed {
+  background: rgba(220,0,0,0.12);
+  border: 2px dashed #dc0000;
+}
+.swatch-merged {
+  background: rgba(150,150,150,0.35);
+  border: 2px dashed #888;
+}
+.swatch-split {
+  background: rgba(255,140,0,0.25);
+  border: 2px dashed #ff8c00;
+}
+
+/* ================================================================
+   BOUNDARY DISPUTE MODAL
+   ================================================================ */
+#boundaryDisputeModal .modal-header {
+  background: linear-gradient(135deg, #b71c1c, #c62828);
+  color: #fff;
+  padding: 12px 20px;
+}
+#boundaryDisputeModal .modal-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+#disputeCanvas {
+  width: 100%;
+  height: 240px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f5f5f5;
+  display: block;
+}
+
+.dispute-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  justify-content: center;
+}
+.dispute-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.disp-swatch {
+  width: 26px;
+  height: 10px;
+  border-radius: 2px;
+  border: 2px solid;
+}
+.disp-legal    { background: rgba(25,118,210,0.15); border-color: #1976d2; }
+.disp-claimed  { background: rgba(198,40,40,0.0);   border-color: #c62828; border-style: dashed; }
+.disp-overlap  { background: rgba(198,40,40,0.35);  border-color: #c62828; }
+
+.evidence-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.evidence-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 0.82rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+.evidence-checklist li:last-child { border-bottom: none; }
+.evidence-check {
+  width: 15px;
+  height: 15px;
+  accent-color: #1976d2;
+  cursor: pointer;
+}
+.evidence-label {
+  flex: 1;
+  color: #37474f;
+}
+.evidence-label.checked-item {
+  text-decoration: line-through;
+  color: #90a4ae;
+}
+
+.upload-drop-zone {
+  border: 2px dashed #b0bec5;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  background: #fafafa;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  margin-top: 8px;
+}
+.upload-drop-zone:hover {
+  border-color: #1976d2;
+  background: #e3f2fd;
+}
+.upload-drop-zone i {
+  font-size: 1.6rem;
+  color: #b0bec5;
+  margin-bottom: 6px;
+  display: block;
+}
+.upload-drop-zone span {
+  font-size: 0.78rem;
+  color: #78909c;
+}
+.upload-file-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 8px;
+}
+.upload-file-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #37474f;
+  padding: 3px 0;
+}
+.upload-file-list li i { color: #1976d2; }
+
+/* ================================================================
+   HIGHLIGHT LAYER STYLE  (search results)
+   ================================================================ */
+/* No CSS needed — handled via OL style object in cadastral.js */
+
+/* ================================================================
+   STUBS MODAL (Survey Plan / Boundary Adjustment / etc.)
+   ================================================================ */
+.stub-modal-body {
+  padding: 30px 20px;
+  text-align: center;
+  color: #78909c;
+}
+.stub-modal-body i {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  display: block;
+  color: #b0bec5;
+}
+.stub-modal-body h5 {
+  color: #455a64;
+  font-weight: 700;
+}
+.stub-modal-body p {
+  font-size: 0.85rem;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 768px) {
+  #cadastralSidebar {
+    width: 100%;
+    min-width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 200;
+  }
+  #cadastralSidebar.sidebar-hidden {
+    width: 0;
+    min-width: 0;
+  }
+  #mapLegend {
+    right: 5px;
+    bottom: 35px;
+  }
+}

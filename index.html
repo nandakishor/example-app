@@ -23,29 +23,260 @@
     <script src="assets/js/ol-ext.js"></script>
     <!-- Turf.js v6 -->
     <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <!-- ── NEW: Cadastral Module CSS ── -->
+    <link rel="stylesheet" href="custom/css/cadastral.css" />
     <title>Example App – Parcel Manager</title>
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-light bg-light">
+    <!-- ================================================================ -->
+    <!--  NAVBAR  (existing + sidebar toggle button added at right)        -->
+    <!-- ================================================================ -->
+    <nav class="navbar navbar-light bg-light" style="display:flex;align-items:center;">
         <a class="navbar-brand" href="#">
             <img src="assets\img\img.png" width="30" height="40" class="d-inline-block align-top" alt="Logo" />
             <i class="far fa-smile fa-2x"></i> Parcel Manager
         </a>
+        <!-- NEW: sidebar toggle sits at right edge of navbar -->
+        <button id="sidebarToggleBtn" title="Toggle Cadastral Panel">
+            <i class="fas fa-layer-group"></i>
+        </button>
     </nav>
 
-    <!-- Map div-->
-    <div class="map" id="map"></div>
+    <!-- ================================================================ -->
+    <!--  APP SHELL  – sidebar + map sit side-by-side in a flex row        -->
+    <!-- ================================================================ -->
+    <div id="appShell">
 
-    <!-- Popup -->
+        <!-- ============================================================ -->
+        <!--  CADASTRAL SIDEBAR                                            -->
+        <!-- ============================================================ -->
+        <aside id="cadastralSidebar">
+
+            <!-- ── SEARCH & FILTER SECTION ── -->
+            <div class="sidebar-section-header" data-target="searchFilterSection">
+                <i class="fas fa-search"></i> Search Parcels
+                <i class="fas fa-chevron-down caret"></i>
+            </div>
+            <div id="searchFilterSection">
+                <div class="sidebar-card">
+                    <div class="sidebar-card-body">
+                        <form class="cadastral-search-form" onsubmit="searchParcels(); return false;">
+                            <div class="form-group">
+                                <label for="searchSurveyNo">Parcel / Survey No.</label>
+                                <input type="text" class="form-control" id="searchSurveyNo"
+                                    placeholder="e.g. SRV-1042" />
+                            </div>
+                            <!-- ── STATE (dynamic from pincode_master) ── -->
+                            <div class="form-group">
+                                <label for="searchState">State</label>
+                                <select class="form-control" id="searchState">
+                                    <option value="all">Loading states…</option>
+                                </select>
+                            </div>
+                            <!-- ── DISTRICT (cascades from State) ── -->
+                            <div class="form-group">
+                                <label for="searchDistrict">District</label>
+                                <select class="form-control" id="searchDistrict" disabled>
+                                    <option value="all">Select a state first</option>
+                                </select>
+                            </div>
+                            <!-- ── PINCODE (cascades from District) ── -->
+                            <div class="form-group">
+                                <label for="searchPincode">Pincode</label>
+                                <select class="form-control" id="searchPincode" disabled>
+                                    <option value="all">Select a district first</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="searchLandZone">Land Use Zone</label>
+                                <select class="form-control" id="searchLandZone">
+                                    <option value="all">All Zones</option>
+                                    <option value="residential">Residential Land</option>
+                                    <option value="commercial">Commercial Land</option>
+                                    <option value="water">Water Body</option>
+                                    <option value="building">Building</option>
+                                    <option value="government">Government Building</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="searchStatus">Parcel Status</label>
+                                <select class="form-control" id="searchStatus">
+                                    <option value="all">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="merged">Merged (Archived)</option>
+                                    <option value="split">Split (Archived)</option>
+                                </select>
+                            </div>
+                            <div class="d-flex gap-2" style="gap:6px;">
+                                <button type="submit" class="btn btn-search-primary flex-grow-1">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                                <button type="button" class="btn btn-search-clear" onclick="clearSearch()">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                            <div id="searchResultsBadge" style="display:none;margin-top:6px;"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── SELECTED PARCEL CARD ── -->
+            <div id="parcelSummaryCard">
+                <div class="parcel-card-header">
+                    <span><i class="fas fa-map-marked-alt mr-1"></i> Selected Parcel</span>
+                    <span id="parcelCardStatusBadge" class="parcel-status-badge status-active">ACTIVE</span>
+                </div>
+                <div class="sidebar-card-body" style="padding:10px 14px 0;">
+                    <table class="parcel-info-table">
+                        <caption class="sr-only">Selected parcel attributes</caption>
+                        <thead class="sr-only"><tr><th scope="col">Field</th><th scope="col">Value</th></tr></thead>
+                        <tbody id="parcelCardTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="parcel-card-actions">
+                    <button class="btn btn-primary btn-sm" onclick="parcelCardEdit()" title="Edit geometry & attributes">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="parcelCardSplit()" title="Split this parcel">
+                        <i class="fas fa-cut"></i> Split
+                    </button>
+                    <button class="btn btn-warning btn-sm" onclick="parcelCardMerge()" title="Start merge from this parcel">
+                        <i class="fas fa-object-group"></i> Merge
+                    </button>
+                    <button class="btn btn-dark btn-sm" onclick="parcelCardDispute()" title="Open Boundary Dispute">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── SURVEY & CADASTRAL NAVIGATION ── -->
+            <div class="sidebar-section-header" data-target="cadastralNavSection" style="margin-top:6px;">
+                <i class="fas fa-drafting-compass"></i> Survey &amp; Cadastral
+                <i class="fas fa-chevron-down caret"></i>
+            </div>
+            <div id="cadastralNavSection">
+                <ul class="cadastral-nav-list">
+                    <li class="cadastral-nav-item">
+                        <button type="button" onclick="cadastralSurveyPlan()" title="Open print-ready Survey Plan">
+                            <i class="fas fa-file-alt"></i>
+                            Survey Plan
+                            <span class="nav-badge">PDF</span>
+                        </button>
+                    </li>
+                    <li class="cadastral-nav-item">
+                        <button type="button" onclick="startSplitMode()" title="Draw a cut-line to split the selected parcel">
+                            <i class="fas fa-cut"></i>
+                            Parcel Split
+                        </button>
+                    </li>
+                    <li class="cadastral-nav-item">
+                        <button type="button" onclick="startMergeMode()" title="Select ≥ 2 adjacent parcels to merge">
+                            <i class="fas fa-object-group"></i>
+                            Parcel Merge
+                        </button>
+                    </li>
+                    <li class="cadastral-nav-item">
+                        <button type="button" onclick="openDisputeModal(window._selectedCardFeature)" title="Open Boundary Dispute viewer">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Boundary Dispute
+                            <span class="nav-badge" style="background:#fdecea;color:#c62828;">NEW</span>
+                        </button>
+                    </li>
+                    <li class="cadastral-nav-item">
+                        <button type="button" onclick="cadastralBoundaryAdj()" title="Submit a boundary adjustment request">
+                            <i class="fas fa-border-all"></i>
+                            Boundary Adjustment
+                        </button>
+                    </li>
+                    <li class="cadastral-nav-item">
+                        <button type="button" onclick="cadastralCoordsUpdate()" title="Submit updated GPS coordinates">
+                            <i class="fas fa-crosshairs"></i>
+                            Coordinates Update
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+        </aside><!-- /#cadastralSidebar -->
+
+        <!-- ============================================================ -->
+        <!--  MAP WRAPPER  (position:relative so HUD / legend anchor to it) -->
+        <!-- ============================================================ -->
+        <div style="position:relative;flex:1 1 auto;min-width:0;height:100%;">
+
+            <!-- Map canvas (existing) -->
+            <div class="map" id="map"></div>
+
+            <!-- ── NEW: Extra toolbar (satellite / measure) ── -->
+            <div id="cadastralToolbar" class="ol-unselectable">
+                <button id="sateliteToggleBtn" onclick="toggleSatellite()" title="Toggle Satellite Imagery">
+                    <i class="fas fa-satellite"></i>
+                </button>
+                <button id="measureAreaBtn" onclick="startMeasureArea()" title="Measure Area">
+                    <i class="fas fa-draw-polygon"></i>
+                </button>
+                <button id="measureDistBtn" onclick="startMeasureDist()" title="Measure Distance">
+                    <i class="fas fa-ruler"></i>
+                </button>
+                <button id="cancelMeasureBtn" onclick="cancelMeasure()" title="Cancel Measurement" style="display:none;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- ── NEW: Map legend ── -->
+            <div id="mapLegend">
+                <button id="legendToggleBtn" title="Toggle Legend">
+                    <i class="fas fa-map mr-1"></i> Legend
+                    <i class="fas fa-chevron-up legend-caret"></i>
+                </button>
+                <div id="legendBody">
+                    <div class="legend-item"><div class="legend-swatch swatch-residential"></div>Residential</div>
+                    <div class="legend-item"><div class="legend-swatch swatch-commercial"></div>Commercial</div>
+                    <div class="legend-item"><div class="legend-swatch swatch-agricultural"></div>Agricultural</div>
+                    <hr style="margin:6px 0;" />
+                    <div class="legend-item"><div class="legend-swatch swatch-selected"></div>Selected</div>
+                    <div class="legend-item"><div class="legend-swatch swatch-disputed"></div>Disputed</div>
+                    <div class="legend-item"><div class="legend-swatch swatch-merged"></div>Merged (Archived)</div>
+                    <div class="legend-item"><div class="legend-swatch swatch-split"></div>Split (Archived)</div>
+                </div>
+            </div>
+
+            <!-- ── NEW: Coordinate / scale HUD ── -->
+            <div id="coordHud">
+                <div class="hud-item">
+                    <span class="hud-label">Lon</span>
+                    <span id="hudLon">—</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Lat</span>
+                    <span id="hudLat">—</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">Zoom</span>
+                    <span id="hudZoom">—</span>
+                </div>
+            </div>
+
+        </div><!-- /map wrapper -->
+
+    </div><!-- /#appShell -->
+
+    <!-- ================================================================ -->
+    <!--  POPUP  (existing — moved here; was inside map div)               -->
+    <!-- Also kept separate from #appShell so OL overlay works correctly   -->
+    <!-- ================================================================ -->
     <div id="popup" class="ol-popup">
         <a href="#" id="popup-closer" class="ol-popup-closer" aria-label="Close popup"></a>
         <div id="popup-content"></div>
     </div>
 
+    <!-- ── NEW: Measure tooltip element (OL Overlay target) ── -->
+    <div id="measureTooltip" class="measure-tooltip" style="display:none;"></div>
+
     <!-- ================================================================ -->
-    <!--  DRAW TYPE MODAL                                                  -->
+    <!--  DRAW TYPE MODAL  (existing — unchanged)                          -->
     <!-- ================================================================ -->
     <div class="modal fade" id="startDrawModal" tabindex="-1" role="dialog" aria-labelledby="startdrawModalLabel"
         aria-hidden="true">
@@ -79,7 +310,7 @@
     </div>
 
     <!-- ================================================================ -->
-    <!--  FEATURE INFORMATION MODAL (Save / Update)                        -->
+    <!--  FEATURE INFORMATION MODAL  (existing — unchanged)               -->
     <!-- ================================================================ -->
     <div class="modal fade" id="enterInformationModal" tabindex="-1" role="dialog"
         aria-labelledby="enterInformationModalLabel" aria-hidden="true">
@@ -123,7 +354,7 @@
     </div>
 
     <!-- ================================================================ -->
-    <!--  MERGE MODAL                                                      -->
+    <!--  MERGE MODAL  (existing — unchanged)                              -->
     <!-- ================================================================ -->
     <div class="modal fade" id="mergeModal" tabindex="-1" role="dialog" aria-labelledby="mergeModalLabel"
         aria-hidden="true">
@@ -174,7 +405,7 @@
     </div>
 
     <!-- ================================================================ -->
-    <!--  SPLIT CHILDREN MODAL                                             -->
+    <!--  SPLIT CHILDREN MODAL  (existing — unchanged)                    -->
     <!-- ================================================================ -->
     <div class="modal fade" id="splitModal" tabindex="-1" role="dialog" aria-labelledby="splitModalLabel"
         aria-hidden="true">
@@ -206,15 +437,258 @@
         </div>
     </div>
 
-    <!-- Boostrap JS -->
+    <!-- ================================================================ -->
+    <!--  NEW: BOUNDARY DISPUTE MODAL                                      -->
+    <!-- ================================================================ -->
+    <div class="modal fade" id="boundaryDisputeModal" tabindex="-1" role="dialog"
+        aria-labelledby="disputeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background:linear-gradient(135deg,#b71c1c,#c62828);color:#fff;">
+                    <h5 class="modal-title" id="disputeModalLabel">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Boundary Dispute Viewer
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Claimant Details (top row) -->
+                    <div class="row mb-3">
+                        <div class="col-md-5">
+                            <div class="form-group mb-2">
+                                <label for="disputeClaimantName" style="font-size:0.8rem;font-weight:600;">Claimant Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="disputeClaimantName"
+                                    placeholder="Full name of claimant" required />
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="disputeClaimantContact" style="font-size:0.8rem;font-weight:600;">Contact (Phone / Email)</label>
+                                <input type="text" class="form-control form-control-sm" id="disputeClaimantContact"
+                                    placeholder="e.g. 9876543210" />
+                            </div>
+                            <div class="form-group mb-0">
+                                <label for="disputeDesc" style="font-size:0.8rem;font-weight:600;">Dispute Description</label>
+                                <textarea class="form-control form-control-sm" id="disputeDesc" rows="3"
+                                    placeholder="Describe the boundary encroachment…"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <h6 class="font-weight-bold mb-2" style="font-size:0.82rem;text-transform:uppercase;letter-spacing:0.8px;color:#455a64;">
+                                <i class="fas fa-map mr-1"></i> Encroachment Diagram
+                            </h6>
+                            <canvas id="disputeCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Evidence Checklist -->
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold mb-2" style="font-size:0.82rem;text-transform:uppercase;letter-spacing:0.8px;color:#455a64;">
+                                <i class="fas fa-clipboard-list mr-1"></i> Supporting Evidence
+                            </h6>
+                            <ul class="evidence-checklist">
+                                <li>
+                                    <input type="checkbox" class="evidence-check" id="ev1" />
+                                    <label for="ev1" class="evidence-label">Satellite / Aerial Image</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" class="evidence-check" id="ev2" />
+                                    <label for="ev2" class="evidence-label">Boundary Marker Photos</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" class="evidence-check" id="ev3" />
+                                    <label for="ev3" class="evidence-label">Licensed Survey Report</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" class="evidence-check" id="ev4" />
+                                    <label for="ev4" class="evidence-label">Title Deed / Land Record</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" class="evidence-check" id="ev5" />
+                                    <label for="ev5" class="evidence-label">Witness Statements</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" class="evidence-check" id="ev6" />
+                                    <label for="ev6" class="evidence-label">Historical Cadastral Map</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" class="evidence-check" id="ev7" />
+                                    <label for="ev7" class="evidence-label">GPS Coordinate Sheet</label>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- File Upload -->
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold mb-2" style="font-size:0.82rem;text-transform:uppercase;letter-spacing:0.8px;color:#455a64;">
+                                <i class="fas fa-upload mr-1"></i> Upload Evidence Files
+                            </h6>
+                            <div id="evidenceDropZone" class="upload-drop-zone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Drop files here or <u>click to browse</u></span>
+                                <input type="file" id="evidenceFileInput" multiple style="display:none;"
+                                    accept=".pdf,.jpg,.jpeg,.png,.tif,.doc,.docx" />
+                            </div>
+                            <ul id="uploadFileList" class="upload-file-list"></ul>
+                            <div class="dispute-legend mt-2">
+                                <div class="dispute-legend-item">
+                                    <div class="disp-swatch disp-legal"></div>
+                                    <span>Parcel A – Legal Boundary</span>
+                                </div>
+                                <div class="dispute-legend-item">
+                                    <div class="disp-swatch disp-claimed"></div>
+                                    <span>Parcel B – Claimed Boundary</span>
+                                </div>
+                                <div class="dispute-legend-item">
+                                    <div class="disp-swatch disp-overlap"></div>
+                                    <span>Encroached Area</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="disputeSubmitMsg" class="mt-2" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" onclick="submitDisputeReport()">
+                        <i class="fas fa-paper-plane mr-1"></i> Submit Dispute Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!--  BOUNDARY ADJUSTMENT MODAL                                        -->
+    <!-- ================================================================ -->
+    <div class="modal fade" id="boundaryAdjModal" tabindex="-1" role="dialog"
+        aria-labelledby="boundaryAdjModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;">
+                    <h5 class="modal-title" id="boundaryAdjModalLabel">
+                        <i class="fas fa-ruler-combined mr-2"></i>Boundary Adjustment Request
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 mb-3" style="font-size:0.82rem;">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Submit a minor boundary correction request. A licensed surveyor approval workflow will process this.
+                    </div>
+                    <input type="hidden" id="adjParcelId" value="" />
+                    <div class="form-group">
+                        <label for="adjParcelDisplay" style="font-size:0.82rem;font-weight:600;">Selected Parcel</label>
+                        <input type="text" class="form-control form-control-sm" id="adjParcelDisplay" readonly placeholder="Select a parcel on the map first" />
+                    </div>
+                    <div class="form-group">
+                        <label for="adjReason" style="font-size:0.82rem;font-weight:600;">Reason for Adjustment <span class="text-danger">*</span></label>
+                        <textarea class="form-control form-control-sm" id="adjReason" rows="3"
+                            placeholder="Describe why the boundary needs adjustment…" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-7">
+                            <label for="adjSurveyorRef" style="font-size:0.82rem;font-weight:600;">Surveyor Reference / Licence No.</label>
+                            <input type="text" class="form-control form-control-sm" id="adjSurveyorRef"
+                                placeholder="e.g. SRVR-MH-2024-001" />
+                        </div>
+                        <div class="form-group col-md-5">
+                            <label for="adjSurveyorDate" style="font-size:0.82rem;font-weight:600;">Survey Date</label>
+                            <input type="date" class="form-control form-control-sm" id="adjSurveyorDate" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="adjNotes" style="font-size:0.82rem;font-weight:600;">Additional Notes</label>
+                        <textarea class="form-control form-control-sm" id="adjNotes" rows="2" placeholder="Any other relevant details…"></textarea>
+                    </div>
+                    <div id="adjSubmitMsg" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitBoundaryAdj()">
+                        <i class="fas fa-paper-plane mr-1"></i> Submit Request
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!--  COORDINATES UPDATE MODAL                                         -->
+    <!-- ================================================================ -->
+    <div class="modal fade" id="coordsUpdateModal" tabindex="-1" role="dialog"
+        aria-labelledby="coordsUpdateModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background:linear-gradient(135deg,#2e7d32,#388e3c);color:#fff;">
+                    <h5 class="modal-title" id="coordsUpdateModalLabel">
+                        <i class="fas fa-map-pin mr-2"></i>GPS Coordinates Update
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning py-2 mb-3" style="font-size:0.82rem;">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Submit updated GPS coordinates. Changes are reviewed before being applied to the parcel geometry.
+                    </div>
+                    <input type="hidden" id="coordsParcelId" value="" />
+                    <div class="form-group">
+                        <label for="coordsParcelDisplay" style="font-size:0.82rem;font-weight:600;">Selected Parcel</label>
+                        <input type="text" class="form-control form-control-sm" id="coordsParcelDisplay" readonly placeholder="Select a parcel on the map first" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-7">
+                            <label for="coordsGpsSource" style="font-size:0.82rem;font-weight:600;">GPS Instrument / Source <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="coordsGpsSource"
+                                placeholder="e.g. Leica TS16, DJI Phantom RTK" />
+                        </div>
+                        <div class="form-group col-md-5">
+                            <label for="coordsSurveyDate" style="font-size:0.82rem;font-weight:600;">Survey Date</label>
+                            <input type="date" class="form-control form-control-sm" id="coordsSurveyDate" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="coordsAccuracy" style="font-size:0.82rem;font-weight:600;">Accuracy (metres)</label>
+                        <input type="number" class="form-control form-control-sm" id="coordsAccuracy"
+                            min="0" step="0.001" placeholder="e.g. 0.05" />
+                    </div>
+                    <div class="form-group">
+                        <label for="coordsGeoJSON" style="font-size:0.82rem;font-weight:600;">New Coordinates (GeoJSON) <span class="text-danger">*</span></label>
+                        <textarea class="form-control form-control-sm" id="coordsGeoJSON" rows="4"
+                            placeholder='{"type":"Point","coordinates":[lon, lat]}'></textarea>
+                        <small class="text-muted">Paste a valid GeoJSON Point or Polygon. EPSG:4326 (WGS84).</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="coordsNotes" style="font-size:0.82rem;font-weight:600;">Notes</label>
+                        <textarea class="form-control form-control-sm" id="coordsNotes" rows="2" placeholder="Any additional context…"></textarea>
+                    </div>
+                    <div id="coordsSubmitMsg" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="submitCoordsUpdate()">
+                        <i class="fas fa-paper-plane mr-1"></i> Submit Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
         integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
         crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
         integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
         crossorigin="anonymous"></script>
-    <!-- Main App -->
+    <!-- Main App (existing — load first) -->
     <script src="custom/js/main.js"></script>
+    <!-- ── NEW: Cadastral Module (loads after main.js) ── -->
+    <script src="custom/js/cadastral.js"></script>
+
 </body>
 
 </html>
